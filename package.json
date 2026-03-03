@@ -44,7 +44,7 @@
     "@mihnea.dev/puppeteer-extra-amazon-captcha": "^1.0.3",
     "@xcrap/core": "^0.2.3",
     "@xcrap/extractor": "^0.3.2",
-    "@xcrap/got-scraping-client": "^0.1.0",
+    "@xcrap/got-scraping-client": "^0.1.1",
     "@xcrap/puppeteer-extra-client": "^0.1.0",
     "@xcrap/transformer": "^0.3.7",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
