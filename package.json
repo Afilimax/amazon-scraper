@@ -1,6 +1,6 @@
 {
   "name": "@afilimax/amazon-scraper",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "commonjs",
   "description": "Afilimax Amazon Scraper é um pacote de extração de dados do marketplace da Amazon, baseado do framework de Web Scraping \"Xcrap\"",
   "main": "./dist/index.js",
