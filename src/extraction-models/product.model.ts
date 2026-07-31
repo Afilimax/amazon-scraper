@@ -25,19 +25,19 @@ const productFeaturesExtractionModel = new HtmlExtractionModel({
 const productRatingExtractionModel = new HtmlExtractionModel({
     average: {
         query: css(".cm-cr-review-stars-spacing-big span, #acrPopover .a-color-base"),
-        extractor: extract("innerText")
+        extractor: extract("innerText"),
     },
     totalReviews: {
         query: css("#acrCustomerReviewText"),
-        extractor: extract("innerText")
-    }
+        extractor: extract("innerText"),
+    },
 })
 
 const productAvailabilityExtractionModel = new HtmlExtractionModel({
     inStockText: {
         query: css("span, #kindleExtraMessage"),
-        extractor: extract("innerText")
-    }
+        extractor: extract("innerText"),
+    },
 })
 
 const shippingExtractionModel = new HtmlExtractionModel({
@@ -47,8 +47,8 @@ const shippingExtractionModel = new HtmlExtractionModel({
     },
     estimatedTime: {
         query: css(".a-text-bold"),
-        extractor: extract("innerText")
-    }
+        extractor: extract("innerText"),
+    },
 })
 
 export const productExtractionModel = new HtmlExtractionModel({
@@ -79,7 +79,7 @@ export const productExtractionModel = new HtmlExtractionModel({
     description: {
         query: css("#productDescription p, div[data-a-expander-name='book_description_expander']"),
         extractor: extract("innerText"),
-        default: null
+        default: null,
     },
     images: {
         query: css(".imgTagWrapper img"),
@@ -88,7 +88,7 @@ export const productExtractionModel = new HtmlExtractionModel({
     },
     brand: {
         query: css("#bylineInfo"),
-        extractor: extract("innerText")
+        extractor: extract("innerText"),
     },
     thumbnails: {
         query: css("#altImages img"),
@@ -112,6 +112,6 @@ export const productExtractionModel = new HtmlExtractionModel({
     shipping: {
         query: css("#deliveryBlockMessage"),
         model: shippingExtractionModel,
-        default: null
-    }
+        default: null,
+    },
 })

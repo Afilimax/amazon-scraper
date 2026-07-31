@@ -1,3 +1,4 @@
+import { describe, it, expect } from "vitest"
 import { HtmlParser } from "@xcrap/extractor"
 import { Marketplace } from "@afilimax/core"
 import path from "node:path"

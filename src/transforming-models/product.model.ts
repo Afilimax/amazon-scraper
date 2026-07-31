@@ -1,4 +1,12 @@
-import { AnyValidator, get, NumberTransformer, StringTransformer, StringValidator, transform, TransformingModel } from "@xcrap/transformer"
+import {
+    AnyValidator,
+    get,
+    NumberTransformer,
+    StringTransformer,
+    StringValidator,
+    transform,
+    TransformingModel,
+} from "@xcrap/transformer"
 
 import { extractProductAsinFromUrl, cleanSpecificationTextValue } from "../utils"
 import { Marketplace } from "@afilimax/core"
@@ -16,7 +24,7 @@ const ratingTransformationModel = new TransformingModel({
         transform({
             key: "average",
             transformer: (average: number) => average / 5,
-        })
+        }),
     ],
     totalReviews: [
         transform({
@@ -51,7 +59,7 @@ const priceTransformationModel = new TransformingModel({
         installment: null,
         originalValue: null,
         pixPrice: null,
-    }
+    },
 })
 
 const featureTransformationModel = new TransformingModel({
@@ -88,13 +96,14 @@ const availabilityTransformationModel = new TransformingModel({
     inStock: [
         transform({
             key: "inStockText",
-            transformer: (inStockText: string) => inStockText.trim() === "Em estoque" || inStockText.trim() === "Disponível instantaneamente",
+            transformer: (inStockText: string) =>
+                inStockText.trim() === "Em estoque" || inStockText.trim() === "Disponível instantaneamente",
         }),
     ],
 }).after({
     append: {
-        quantity: null,   
-    }
+        quantity: null,
+    },
 })
 
 const shippingTransformationModel = new TransformingModel({
@@ -117,21 +126,19 @@ const shippingTransformationModel = new TransformingModel({
                 if (price.toUpperCase() === "GRÁTIS") {
                     return null
                 }
-                
+
                 throw new Error(`Invalid price ${price}`)
-            }, 
+            },
         }),
     ],
-    estimatedTime: [
-        get({ key: "estimatedTime" }),
-    ],
+    estimatedTime: [get({ key: "estimatedTime" })],
 }).after({
     append: {
         currency: "BRL",
         prime: null,
         full: null,
-        freeShipping: null
-    }
+        freeShipping: null,
+    },
 })
 
 export const productTransformationModel = new TransformingModel({
@@ -159,7 +166,7 @@ export const productTransformationModel = new TransformingModel({
             transformer: StringTransformer.collapseWhitespace,
         }),
     ],
-    brand: [        
+    brand: [
         transform({
             key: "brand",
             transformer: StringTransformer.collapseWhitespace,
@@ -197,10 +204,5 @@ export const productTransformationModel = new TransformingModel({
         marketplace: Marketplace.Amazon,
         coupons: null,
     },
-    delete: [
-        "currentPriceSymbol",
-        "currentPriceWhole",
-        "currentPriceDecimal",
-        "currentPriceFraction"
-    ]
+    delete: ["currentPriceSymbol", "currentPriceWhole", "currentPriceDecimal", "currentPriceFraction"],
 })

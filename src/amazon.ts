@@ -1,16 +1,18 @@
 import { PuppeteerExtraClient, PuppeteerExtraClientOptions } from "@xcrap/puppeteer-extra-client"
 import { GotScrapingClient, GotScrapingClientOptions } from "@xcrap/got-scraping-client"
 import AmazonCaptchaPlugin from "@mihnea.dev/puppeteer-extra-amazon-captcha"
-import StealthPlugin from "puppeteer-extra-plugin-stealth"
 import { extract, HtmlParser, xpath } from "@xcrap/extractor"
+import StealthPlugin from "puppeteer-extra-plugin-stealth"
 import { Transformer } from "@xcrap/transformer"
-import { scrapedProductSchema, ScrapedProduct } from "@afilimax/core"
 import { HttpResponse } from "@xcrap/core"
 import { Logger } from "winston"
 
+import { scrapedProductSchema, ScrapedProduct, ScrapedProductPreview, Marketplace } from "@afilimax/core"
+
+import { removeRefSegment, removeQueryParams, extractProductAsinFromUrl } from "./utils"
+import { searchResultsExtractionModel } from "./extraction-models/search-results.model"
 import { productTransformationModel } from "./transforming-models/product.model"
 import { productExtractionModel } from "./extraction-models/product.model"
-import { removeRefSegment, removeQueryParams } from "./utils"
 import { createLogger } from "./helpers/logger.helper"
 
 export type AmazonScraperOptions = {
@@ -21,6 +23,11 @@ export type AmazonScraperOptions = {
 
 export type AmazonScraperGetProductOptions = {
     url: string
+}
+
+export type AmazonScraperSearchProductsOptions = {
+    query: string
+    page?: number
 }
 
 export type ExtractProductOptions = {
@@ -89,7 +96,7 @@ export class AmazonScraper {
         return await AmazonScraper.extractProduct({
             parser: parser,
             url: url,
-            logger: this.logger
+            logger: this.logger,
         })
     }
 
@@ -100,10 +107,13 @@ export class AmazonScraper {
 
         logger?.debug("Transforming extracted data")
 
-        const fullPriceString = `${extractedData.currentPriceWhole}.${extractedData.currentPriceFraction}`.replace(",", "")
+        const fullPriceString = `${extractedData.currentPriceWhole}.${extractedData.currentPriceFraction}`.replace(
+            ",",
+            "",
+        )
 
         const transformer = new Transformer({ ...extractedData, url: url, price: fullPriceString })
-        const transformedData = await transformer.transform(productTransformationModel) as any
+        const transformedData = (await transformer.transform(productTransformationModel)) as any
 
         return scrapedProductSchema.parse({
             ...transformedData,
@@ -114,6 +124,68 @@ export class AmazonScraper {
             categories: null,
             scrapedAt: new Date().toISOString(),
         })
+    }
+
+    async searchProducts({ query, page = 1 }: AmazonScraperSearchProductsOptions): Promise<ScrapedProductPreview[]> {
+        const encodedQuery = encodeURIComponent(query)
+        const url = `https://www.amazon.com.br/s?k=${encodedQuery}&page=${page}`
+
+        this.logger.debug(`Searching products with query: "${query}" (page ${page})`)
+        this.logger.debug(`Search URL: ${url}`)
+
+        let response = await this.gotScrapingClient.fetch({ url })
+
+        const hasCaptcha = await this.hasCaptcha(response)
+
+        if (hasCaptcha) {
+            this.logger.debug("Captcha detected, switching to Puppeteer Extra Client")
+            response = await this.puppeteerClient.fetch({ url })
+        }
+
+        const parser = response.asHtmlParser()
+
+        this.logger.debug("Extracting search results from HTML")
+
+        const extracted = (await parser.extractModel({ model: searchResultsExtractionModel })) as any
+        const items: any[] = extracted.items ?? []
+        const scrapedAt = new Date().toISOString()
+
+        return items
+            .filter((item) => item.title && item.url)
+            .map((item): ScrapedProductPreview => {
+                const fullUrl = item.url.startsWith("http") ? item.url : `https://www.amazon.com.br${item.url}`
+
+                const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,\.]/g, "").replace(",", ".")) : null
+
+                const originalPriceValue = item.originalPrice
+                    ? parseFloat(item.originalPrice.replace(/[^\d,\.]/g, "").replace(",", "."))
+                    : null
+
+                const ratingAverage = item.rating ? parseFloat(item.rating.replace(",", ".").split(" ")[0]) : null
+
+                const totalReviews = item.totalReviews
+                    ? parseInt(item.totalReviews.replace(/\./g, "").replace(/,/g, ""), 10)
+                    : null
+
+                return {
+                    marketplace: Marketplace.Amazon,
+                    externalId: item.asin ?? extractProductAsinFromUrl(fullUrl),
+                    title: item.title.trim(),
+                    url: fullUrl,
+                    thumbnail: item.thumbnail ?? null,
+                    price: {
+                        value: isNaN(priceValue as number) ? null : priceValue,
+                        originalValue: isNaN(originalPriceValue as number) ? null : originalPriceValue,
+                        currency: "BRL",
+                    },
+                    rating: {
+                        average: isNaN(ratingAverage as number) ? null : ratingAverage,
+                        totalReviews: isNaN(totalReviews as number) ? null : totalReviews,
+                    },
+                    brand: item.brand ?? null,
+                    scrapedAt,
+                }
+            })
     }
 
     async close() {
