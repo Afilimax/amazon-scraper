@@ -2,15 +2,16 @@ import { HtmlExtractionModel, css, extract } from "@xcrap/extractor"
 
 const searchResultItemExtractionModel = new HtmlExtractionModel({
     title: {
-        // No layout grid, a âncora engloba o h2 (a > h2 > span), então h2 a span falha.
-        // h2 span funciona em ambos os layouts (grid e lista).
-        query: css("h2 span"),
+        // No layout grid, a âncora engloba o h2 (a > h2 > span), então h2 a span funciona.
+        query: css("h2 span, h2 a span, .a-text-normal"),
         extractor: extract("innerText"),
+        default: null,
     },
     url: {
         // a.a-link-normal.a-text-normal é o link no layout real da Amazon; h2 a é o fallback padrao
-        query: css("a.a-link-normal.a-text-normal, h2 a"),
+        query: css("a.a-link-normal.a-text-normal, h2 a, a.a-link-normal"),
         extractor: extract("href"),
+        default: null,
     },
     thumbnail: {
         query: css("img.s-image"),

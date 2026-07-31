@@ -54,18 +54,14 @@ export class AmazonScraper {
         this.logger = createLogger(this.quiet)
     }
 
-    private async hasCaptcha(response: HttpResponse) {
-        const parser = response.asHtmlParser()
-
-        const hasCaptcha = await parser.extractValue({
-            query: xpath(
-                "//button[contains(@class, 'a-button-text') and (contains(text(), 'Continuar comprando') or contains(text(), 'Continue shopping'))]",
-            ),
-            extractor: extract("innerText"),
-            default: null,
-        })
-
-        return hasCaptcha ? true : false
+    private hasCaptchaHtml(html: string): boolean {
+        return (
+            html.length < 30000 ||
+            html.includes("validateCaptcha") ||
+            html.includes("Amazon CAPTCHA") ||
+            html.includes("/errors/validateCaptcha") ||
+            html.includes("api-services-support@amazon.com")
+        )
     }
 
     async getProductPageParser({ url }: AmazonScraperGetProductOptions): Promise<HtmlParser> {
@@ -78,9 +74,7 @@ export class AmazonScraper {
 
         let response = await this.gotScrapingClient.fetch({ url: url })
 
-        const hasCaptcha = await this.hasCaptcha(response)
-
-        if (hasCaptcha) {
+        if (this.hasCaptchaHtml(response.body)) {
             this.logger.debug("Using Puppeter Extra Client")
             response = await this.puppeteerClient.fetch({ url: url })
         }
@@ -135,24 +129,23 @@ export class AmazonScraper {
 
         let response = await this.gotScrapingClient.fetch({ url })
 
-        const hasCaptcha = await this.hasCaptcha(response)
-
-        if (hasCaptcha) {
+        if (this.hasCaptchaHtml(response.body)) {
             this.logger.debug("Captcha detected, switching to Puppeteer Extra Client")
             response = await this.puppeteerClient.fetch({ url })
         }
 
+        this.logger.debug(`Fetched HTML length: ${response.body.length}`)
         const parser = response.asHtmlParser()
 
         this.logger.debug("Extracting search results from HTML")
 
         const extracted = (await parser.extractModel({ model: searchResultsExtractionModel })) as any
         const items: any[] = extracted.items ?? []
+        this.logger.debug(`Extracted items count: ${items.length}`)
         const scrapedAt = new Date().toISOString()
 
-        return items
-            .filter((item) => item.title && item.url)
-            .map((item): ScrapedProductPreview => {
+        const filtered = items.filter((item) => item.title && item.url)
+        return filtered.map((item): ScrapedProductPreview => {
                 const fullUrl = item.url.startsWith("http") ? item.url : `https://www.amazon.com.br${item.url}`
 
                 const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,\.]/g, "").replace(",", ".")) : null
