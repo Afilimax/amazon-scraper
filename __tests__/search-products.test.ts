@@ -17,7 +17,7 @@ const MOCK_SEARCH_HTML = `
     <h2><a href="/dp/B08N5WRWNW/ref=sr_1_1"><span>Echo Dot 4ª Geração Smart Speaker com Alexa</span></a></h2>
     <img class="s-image" src="https://m.media-amazon.com/images/I/71S5omMBCFL._AC_UL320_.jpg" />
     <span class="a-price"><span class="a-offscreen">R$&nbsp;349,00</span></span>
-    <span class="a-text-price"><span class="a-offscreen">R$&nbsp;499,00</span></span>
+    <span class="a-price a-text-price" data-a-strike="true"><span class="a-offscreen">R$&nbsp;499,00</span></span>
     <span class="a-icon-star-small"><span class="a-icon-alt">4,7 de 5 estrelas</span></span>
     <span class="a-size-base s-underline-text">12.450</span>
     <span class="a-size-base-plus a-color-base">Amazon</span>

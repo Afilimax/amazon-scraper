@@ -157,9 +157,19 @@ export class AmazonScraper {
 
                 const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,\.]/g, "").replace(",", ".")) : null
 
-                const originalPriceValue = item.originalPrice
+                let originalPriceValue = item.originalPrice
                     ? parseFloat(item.originalPrice.replace(/[^\d,\.]/g, "").replace(",", "."))
                     : null
+
+                if (
+                    originalPriceValue !== null &&
+                    priceValue !== null &&
+                    !isNaN(originalPriceValue) &&
+                    !isNaN(priceValue) &&
+                    originalPriceValue <= priceValue
+                ) {
+                    originalPriceValue = null
+                }
 
                 const ratingAverage = item.rating ? parseFloat(item.rating.replace(",", ".").split(" ")[0]) : null
 

@@ -24,8 +24,8 @@ const searchResultItemExtractionModel = new HtmlExtractionModel({
         default: null,
     },
     originalPrice: {
-        // data-a-strike="true" ou .a-text-price .a-offscreen para preco riscado
-        query: css(".a-price.a-text-price[data-a-strike='true'] .a-offscreen, .a-text-price .a-offscreen"),
+        // .a-price.a-text-price contem o preço riscado. Se capturar parcela, amazon.ts descarta pois originalPrice <= price.
+        query: css(".a-price.a-text-price .a-offscreen"),
         extractor: extract("innerText"),
         default: null,
     },
