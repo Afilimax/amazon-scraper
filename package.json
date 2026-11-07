@@ -14,7 +14,10 @@
     "build": "tsc",
     "dev": "ts-node ./src/index.ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "test": "jest"
+    "lint": "eslint \"src/**/*.ts\" --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage"
   },
   "publishConfig": {
     "access": "public"
@@ -28,17 +31,18 @@
   "author": "Marcuth",
   "license": "MIT",
   "devDependencies": {
-    "@types/jest": "^30.0.0",
     "@types/node": "^25.3.0",
+    "@vitest/coverage-v8": "^5.1.0",
     "eslint": "^10.0.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
-    "jest": "^30.2.0",
+    "eslint-plugin-unused-imports": "^4.4.1",
     "prettier": "^3.8.1",
     "prettier-plugin-sort-imports": "^1.8.11",
-    "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.1.0"
   },
   "dependencies": {
     "@mihnea.dev/puppeteer-extra-amazon-captcha": "^1.0.3",
