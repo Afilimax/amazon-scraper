@@ -1,10 +1,9 @@
 import { PuppeteerExtraClient, PuppeteerExtraClientOptions } from "@xcrap/puppeteer-extra-client"
 import { GotScrapingClient, GotScrapingClientOptions } from "@xcrap/got-scraping-client"
 import AmazonCaptchaPlugin from "@mihnea.dev/puppeteer-extra-amazon-captcha"
-import { extract, HtmlParser, xpath } from "@xcrap/extractor"
 import StealthPlugin from "puppeteer-extra-plugin-stealth"
 import { Transformer } from "@xcrap/transformer"
-import { HttpResponse } from "@xcrap/core"
+import { HtmlParser } from "@xcrap/extractor"
 import { Logger } from "winston"
 
 import { scrapedProductSchema, ScrapedProduct, ScrapedProductPreview, Marketplace } from "@afilimax/core"
@@ -155,50 +154,50 @@ export class AmazonScraper {
 
         const filtered = items.filter((item) => item.title && item.url)
         return filtered.map((item): ScrapedProductPreview => {
-                const fullUrl = item.url.startsWith("http") ? item.url : `https://www.amazon.com.br${item.url}`
+            const fullUrl = item.url.startsWith("http") ? item.url : `https://www.amazon.com.br${item.url}`
 
-                // Remove o separador de milhar (".") e converte a vírgula decimal: "R$ 1.299,90" -> 1299.9
-                const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,]/g, "").replace(",", ".")) : null
+            // Remove o separador de milhar (".") e converte a vírgula decimal: "R$ 1.299,90" -> 1299.9
+            const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,]/g, "").replace(",", ".")) : null
 
-                let originalPriceValue = item.originalPrice
-                    ? parseFloat(item.originalPrice.replace(/[^\d,]/g, "").replace(",", "."))
-                    : null
+            let originalPriceValue = item.originalPrice
+                ? parseFloat(item.originalPrice.replace(/[^\d,]/g, "").replace(",", "."))
+                : null
 
-                if (
-                    originalPriceValue !== null &&
-                    priceValue !== null &&
-                    !isNaN(originalPriceValue) &&
-                    !isNaN(priceValue) &&
-                    originalPriceValue <= priceValue
-                ) {
-                    originalPriceValue = null
-                }
+            if (
+                originalPriceValue !== null &&
+                priceValue !== null &&
+                !isNaN(originalPriceValue) &&
+                !isNaN(priceValue) &&
+                originalPriceValue <= priceValue
+            ) {
+                originalPriceValue = null
+            }
 
-                const ratingAverage = item.rating ? parseFloat(item.rating.replace(",", ".").split(" ")[0]) : null
+            const ratingAverage = item.rating ? parseFloat(item.rating.replace(",", ".").split(" ")[0]) : null
 
-                const totalReviews = item.totalReviews
-                    ? parseInt(item.totalReviews.replace(/\./g, "").replace(/,/g, ""), 10)
-                    : null
+            const totalReviews = item.totalReviews
+                ? parseInt(item.totalReviews.replace(/\./g, "").replace(/,/g, ""), 10)
+                : null
 
-                return {
-                    marketplace: Marketplace.Amazon,
-                    externalId: item.asin ?? extractProductAsinFromUrl(fullUrl),
-                    title: item.title.trim(),
-                    url: fullUrl,
-                    thumbnail: item.thumbnail ?? null,
-                    price: {
-                        value: isNaN(priceValue as number) ? null : priceValue,
-                        originalValue: isNaN(originalPriceValue as number) ? null : originalPriceValue,
-                        currency: "BRL",
-                    },
-                    rating: {
-                        average: isNaN(ratingAverage as number) ? null : ratingAverage,
-                        totalReviews: isNaN(totalReviews as number) ? null : totalReviews,
-                    },
-                    brand: item.brand ?? null,
-                    scrapedAt,
-                }
-            })
+            return {
+                marketplace: Marketplace.Amazon,
+                externalId: item.asin ?? extractProductAsinFromUrl(fullUrl),
+                title: item.title.trim(),
+                url: fullUrl,
+                thumbnail: item.thumbnail ?? null,
+                price: {
+                    value: isNaN(priceValue as number) ? null : priceValue,
+                    originalValue: isNaN(originalPriceValue as number) ? null : originalPriceValue,
+                    currency: "BRL",
+                },
+                rating: {
+                    average: isNaN(ratingAverage as number) ? null : ratingAverage,
+                    totalReviews: isNaN(totalReviews as number) ? null : totalReviews,
+                },
+                brand: item.brand ?? null,
+                scrapedAt,
+            }
+        })
     }
 
     async close() {
