@@ -90,6 +90,7 @@ describe("AmazonScraper", () => {
             // Mock do gotScrapingClient para retornar o HTML de teste
             const mockParser = new HtmlParser(MOCK_SEARCH_HTML)
             const mockResponse = {
+                body: MOCK_SEARCH_HTML,
                 asHtmlParser: () => mockParser,
             }
 
@@ -98,7 +99,7 @@ describe("AmazonScraper", () => {
             }
 
             // hasCaptcha sempre retorna false (sem captcha)
-            ;(scraper as any).hasCaptcha = vi.fn().mockResolvedValue(false)
+            ;(scraper as any).hasCaptchaHtml = vi.fn().mockReturnValue(false)
         })
 
         it("deve retornar um array de ScrapedProductPreview", async () => {
@@ -176,10 +177,10 @@ describe("AmazonScraper", () => {
 
         it("deve usar Puppeteer como fallback quando captcha for detectado", async () => {
             const mockParser = new HtmlParser(MOCK_SEARCH_HTML)
-            const mockResponse = { asHtmlParser: () => mockParser }
+            const mockResponse = { body: MOCK_SEARCH_HTML, asHtmlParser: () => mockParser }
             const puppeteerFetchMock = vi.fn().mockResolvedValue(mockResponse)
 
-            ;(scraper as any).hasCaptcha = vi.fn().mockResolvedValue(true)
+            ;(scraper as any).hasCaptchaHtml = vi.fn().mockReturnValue(true)
             ;(scraper as any).puppeteerClient = { fetch: puppeteerFetchMock, close: vi.fn() }
 
             const results = await scraper.searchProducts({ query: "echo dot" })
@@ -190,6 +191,7 @@ describe("AmazonScraper", () => {
 
         it("deve passar o número de página correto na URL de busca", async () => {
             const gotFetchMock = vi.fn().mockResolvedValue({
+                body: MOCK_SEARCH_HTML,
                 asHtmlParser: () => new HtmlParser(MOCK_SEARCH_HTML),
             })
             ;(scraper as any).gotScrapingClient = { fetch: gotFetchMock }
