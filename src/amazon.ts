@@ -36,6 +36,15 @@ export type ExtractProductOptions = {
     logger?: Logger
 }
 
+// O transformer devolve [{ key, value }]; o schema espera { [key]: value } (ou null quando vazio).
+function entriesToRecord(entries: { key: string; value: string }[]): Record<string, string> | null {
+    if (entries.length === 0) {
+        return null
+    }
+
+    return Object.fromEntries(entries.map(({ key, value }) => [key, value]))
+}
+
 export class AmazonScraper {
     private readonly puppeteerClient: PuppeteerExtraClient
     private readonly gotScrapingClient: GotScrapingClient
@@ -112,8 +121,8 @@ export class AmazonScraper {
         return scrapedProductSchema.parse({
             ...transformedData,
             images: transformedData.images.length > 0 ? transformedData.images : null,
-            features: transformedData.features.length > 0 ? transformedData.features : null,
-            specifications: transformedData.specifications.length > 0 ? transformedData.specifications : null,
+            features: entriesToRecord(transformedData.features),
+            specifications: entriesToRecord(transformedData.specifications),
             coupons: null,
             categories: null,
             scrapedAt: new Date().toISOString(),
@@ -148,10 +157,11 @@ export class AmazonScraper {
         return filtered.map((item): ScrapedProductPreview => {
                 const fullUrl = item.url.startsWith("http") ? item.url : `https://www.amazon.com.br${item.url}`
 
-                const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,\.]/g, "").replace(",", ".")) : null
+                // Remove o separador de milhar (".") e converte a vírgula decimal: "R$ 1.299,90" -> 1299.9
+                const priceValue = item.price ? parseFloat(item.price.replace(/[^\d,]/g, "").replace(",", ".")) : null
 
                 let originalPriceValue = item.originalPrice
-                    ? parseFloat(item.originalPrice.replace(/[^\d,\.]/g, "").replace(",", "."))
+                    ? parseFloat(item.originalPrice.replace(/[^\d,]/g, "").replace(",", "."))
                     : null
 
                 if (
