@@ -1,7 +1,11 @@
-# @afilimax/amazon-scraper
+<a href="https://afilimax.net"><img src="https://raw.githubusercontent.com/Afilimax/.github/main/assets/npm-banner.svg" alt="Afilimax — Encontre a oferta. Gere o link. Divulgue sozinho." width="100%" /></a>
 
-[![NPM Version](https://img.shields.io/npm/v/@afilimax/amazon-scraper.svg)](https://www.npmjs.com/package/@afilimax/amazon-scraper)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/%40afilimax%2Famazon-scraper?logo=npm)](https://www.npmjs.com/package/@afilimax/amazon-scraper)
+[![npm downloads](https://img.shields.io/npm/dm/%40afilimax%2Famazon-scraper?logo=npm)](https://www.npmjs.com/package/@afilimax/amazon-scraper)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Afilimax/amazon-scraper/blob/HEAD/LICENSE)
+[![Website](https://img.shields.io/badge/website-afilimax.net-7857FF)](https://afilimax.net)
+
+# @afilimax/amazon-scraper
 
 O `@afilimax/amazon-scraper` é uma biblioteca poderosa e resiliente para extração de dados de produtos da Amazon, focada especialmente no marketplace brasileiro (Amazon.com.br). Construída sobre o ecossistema `@xcrap`, ela oferece um sistema híbrido de requisições que maximiza a velocidade e a taxa de sucesso.
 
@@ -114,3 +118,10 @@ Este projeto é focado no marketplace brasileiro. Se você deseja adicionar supo
 ## 📄 Licença
 
 Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+---
+
+## Automatize sua operação de afiliados
+
+> Use este pacote para automatizar sua operação de afiliados. Conheça a plataforma Afilimax e transforme ofertas em links e divulgação automática.
+
+[Conheça a Afilimax](https://afilimax.net) · [Pacote no npm](https://www.npmjs.com/package/@afilimax/amazon-scraper) · [Repositório no GitHub](https://github.com/Afilimax/amazon-scraper)
