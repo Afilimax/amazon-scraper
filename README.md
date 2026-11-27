@@ -7,117 +7,175 @@
 
 # @afilimax/amazon-scraper
 
-O `@afilimax/amazon-scraper` é uma biblioteca poderosa e resiliente para extração de dados de produtos da Amazon, focada especialmente no marketplace brasileiro (Amazon.com.br). Construída sobre o ecossistema `@xcrap`, ela oferece um sistema híbrido de requisições que maximiza a velocidade e a taxa de sucesso.
+Biblioteca TypeScript para pesquisar e extrair produtos da Amazon Brasil. Construída sobre o ecossistema Xcrap, combina requisições HTTP com navegador automatizado e converte os dados extraídos para os contratos do `@afilimax/core`.
 
-## ✨ Principais Características
+## Recursos
 
-- **🔄 Sistema Híbrido Resiliente**: Utiliza `GotScrapingClient` por padrão para máxima velocidade. Se um CAPTCHA for detectado, a biblioteca muda automaticamente para o `PuppeteerExtraClient` (browser real) para resolver o desafio e obter os dados.
-- **🛡️ Evasão de Bots**: Integra `StealthPlugin` e `AmazonCaptchaPlugin` para minimizar bloqueios.
-- **📊 Dados Estruturados**: Extrai títulos, preços, imagens, avaliações, especificações técnicas, disponibilidade e informações de frete.
-- **🧩 Baseado em @xcrap**: Utiliza modelos de extração e transformação declarativos, facilitando a manutenção.
-- **📦 Tipagem TypeScript**: Totalmente escrito em TypeScript com definições de tipos para todos os retornos.
+- Extração de título, descrição, marca, preços, imagens e avaliações.
+- Leitura de disponibilidade, frete, características e especificações.
+- Pesquisa paginada de produtos na Amazon Brasil.
+- Requisições iniciais com `GotScrapingClient`.
+- Fallback para `PuppeteerExtraClient` ao detectar CAPTCHA ou resposta incompleta.
+- Plugins de stealth e suporte a CAPTCHA da Amazon.
+- Limpeza de parâmetros e segmentos de rastreamento das URLs.
+- Validação do produto final com `scrapedProductSchema`.
 
-## 🚀 Instalação
+## Instalação
 
 ```bash
-npm install @afilimax/amazon-scraper
+npm install @afilimax/amazon-scraper @afilimax/core
 ```
 
-*Nota: Certifique-se de ter as dependências do @afilimax/core devidamente configuradas se estiver usando em um ambiente monorepo.*
+O `@afilimax/core` é uma dependência de par obrigatória, na versão `^0.5.0`.
 
-## 🛠️ Como Usar
+## Como usar
 
-### Exemplo Básico
+### Extrair um produto
 
 ```typescript
-import { AmazonScraper } from '@afilimax/amazon-scraper';
+import { AmazonScraper } from "@afilimax/amazon-scraper"
 
-async function run() {
-    // Inicializa o scraper
-    const scraper = new AmazonScraper({
-        quiet: false // Define se deve exibir logs no console
-    });
+async function main() {
+    const scraper = new AmazonScraper({ quiet: false })
 
     try {
-        const url = 'https://www.amazon.com.br/dp/B08P2B889P';
-        
-        // Obtém os dados do produto
-        const product = await scraper.getProduct({ url });
+        const product = await scraper.getProduct({
+            url: "https://www.amazon.com.br/dp/B08P2B889P",
+        })
 
-        console.log('Dados do Produto:', JSON.stringify(product, null, 2));
+        console.log("Product title:", product.title)
+        console.log(JSON.stringify(product, null, 2))
     } catch (error) {
-        console.error('Erro ao extrair produto:', error);
+        console.error("Product extraction failed:", error)
     } finally {
-        // Importante fechar o browser (Puppeteer) se ele tiver sido aberto
-        await scraper.close();
+        await scraper.close()
     }
 }
 
-run();
+main()
 ```
 
-### Configurações Avançadas
-
-Você pode passar opções customizadas para o Puppeteer ou para o cliente de requisições HTTP (Got):
+### Pesquisar produtos
 
 ```typescript
-const scraper = new AmazonScraper({
-    puppeteer: {
-        headless: true,
-        args: ['--no-sandbox']
-    },
-    gotScraping: {
-        // Opções do got-scraping
-    },
-    quiet: true
-});
+const products = await scraper.searchProducts({
+    query: "wireless headphones",
+    page: 1,
+})
+
+console.log("Products found:", products.length)
 ```
 
-## 📋 API Reference
+Sempre chame `close()` ao finalizar para liberar os recursos do cliente Puppeteer.
 
-### `AmazonScraper`
+## Configuração
 
-#### `constructor(options?: AmazonScraperOptions)`
-- `puppeteer`: Opções para o `PuppeteerExtraClient`.
-- `gotScraping`: Opções para o `GotScrapingClient`.
-- `quiet`: Se `true`, desativa os logs de depuração.
+O construtor aceita `AmazonScraperOptions`:
 
-#### `getProduct(options: { url: string }): Promise<ScrapedProduct>`
-Extrai todos os dados de um produto a partir de uma URL. Faz a limpeza automática de parâmetros de rastreamento da Amazon antes da extração.
+| Opção | Tipo | Padrão | Descrição |
+| :--- | :--- | :--- | :--- |
+| `puppeteer` | `PuppeteerExtraClientOptions` | `{}` | Configuração do cliente de navegador e de seus plugins adicionais. |
+| `gotScraping` | `GotScrapingClientOptions` | `{}` | Configuração do cliente HTTP. |
+| `quiet` | `boolean` | `false` | Controla os logs de diagnóstico criados pelo scraper. |
 
-#### `getProductPageParser(options: { url: string }): Promise<HtmlParser>`
-Obtém apenas o parser HTML da página. Útil se você precisar fazer extrações manuais específicas usando `@xcrap/extractor`.
+Os plugins de stealth e CAPTCHA são incluídos antes dos plugins personalizados. O cliente Puppeteer usa `headless: "new"` por padrão, salvo quando essa opção é sobrescrita.
+
+## Referência da API
+
+### Métodos
+
+#### `getProduct(options): Promise<ScrapedProduct>`
+
+Obtém a página, extrai o modelo de produto, transforma os valores e valida o resultado.
+
+| Opção | Tipo | Descrição |
+| :--- | :--- | :--- |
+| `url` | `string` | URL do produto na Amazon. |
+
+#### `searchProducts(options): Promise<ScrapedProductPreview[]>`
+
+Pesquisa no catálogo brasileiro e retorna itens que possuem título e URL.
+
+| Opção | Tipo | Padrão | Descrição |
+| :--- | :--- | :--- | :--- |
+| `query` | `string` | Obrigatório | Termo de pesquisa. |
+| `page` | `number` | `1` | Página da pesquisa. |
+
+#### `getProductPageParser(options): Promise<HtmlParser>`
+
+Retorna o parser HTML da página para extrações personalizadas com `@xcrap/extractor`. A URL é limpa antes da requisição.
+
+#### `AmazonScraper.extractProduct(options): Promise<ScrapedProduct>`
+
+Método estático que transforma um `HtmlParser` já carregado em um produto validado. Aceita `url`, `parser` e um `logger` opcional do Winston.
 
 #### `close(): Promise<void>`
-Fecha as instâncias abertas do browser. Sempre chame este método ao finalizar o uso.
 
-## 🗃️ Estrutura de Dados Retornada
+Fecha os recursos mantidos pelo `PuppeteerExtraClient`.
 
-O método `getProduct` retorna um objeto seguindo o `scrapedProductSchema` do `@afilimax/core`, contendo:
+### Estrutura do retorno
 
-- `title`: Título do produto.
-- `price`: Preço atual (normalizado).
-- `description`: Descrição detalhada.
-- `images`: Array de URLs das imagens em alta resolução.
-- `brand`: Marca do produto.
-- `rating`: Objeto com média e total de avaliações.
-- `specifications`: Lista de especificações técnicas.
-- `features`: Características principais.
-- `availability`: Status de estoque.
-- `shipping`: Informações de frete estimadas.
-- `scrapedAt`: Timestamp da extração.
+`getProduct` retorna `ScrapedProduct`:
 
-## 🤝 Contribuição
+```typescript
+const product = {
+    marketplace: "amazon",
+    externalId: "B08P2B889P",
+    title: "Wireless Headphones",
+    description: "Wireless over-ear headphones",
+    brand: "Example Brand",
+    price: {
+        value: 299.9,
+        originalValue: 399.9,
+        currency: "BRL",
+        pixPrice: null,
+        installment: null,
+    },
+    shipping: {
+        price: 0,
+        currency: "BRL",
+        freeShipping: true,
+        full: null,
+        prime: true,
+        estimatedTime: null,
+    },
+    rating: {
+        average: 4.7,
+        totalReviews: 1200,
+    },
+    availability: {
+        inStock: true,
+        quantity: null,
+    },
+    images: ["https://example.com/product.jpg"],
+    thumbnails: ["https://example.com/product.jpg"],
+    categories: null,
+    features: { Color: "Black" },
+    specifications: { Connectivity: "Bluetooth" },
+    coupons: null,
+    scrapedAt: "2026-10-17T21:34:16.832Z",
+}
+```
 
-Este projeto é focado no marketplace brasileiro. Se você deseja adicionar suporte para outros idiomas ou marketplaces regionais da Amazon, sinta-se à vontade para abrir uma issue ou enviar um Pull Request.
+A busca retorna `ScrapedProductPreview[]`, com `marketplace`, `externalId`, `title`, `url`, `thumbnail`, `price`, `rating`, `brand` e `scrapedAt`.
 
-1. Clone o repositório.
-2. Instale as dependências: `npm install`.
-3. Execute os testes: `npm test`.
+## Desenvolvimento
 
-## 📄 Licença
+Instale as dependências com `npm install`. Os scripts disponíveis são:
 
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+| Comando | Finalidade |
+| :--- | :--- |
+| `npm run dev` | Executa `src/index.ts` com `ts-node`. |
+| `npm run build` | Compila o TypeScript para `dist/`. |
+| `npm test` | Executa os testes com Vitest. |
+| `npm run test:watch` | Executa os testes em modo de observação. |
+| `npm run test:cov` | Executa os testes com cobertura. |
+| `npm run lint` | Executa o ESLint com correção automática. |
+| `npm run format` | Formata os arquivos de `src/` com Prettier. |
+
+## Licença
+
+Distribuído sob a licença [MIT](./LICENSE).
 
 ---
 
