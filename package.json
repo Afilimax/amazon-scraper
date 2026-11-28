@@ -57,5 +57,13 @@
   },
   "peerDependencies": {
     "@afilimax/core": "^0.5.0"
+  },
+  "homepage": "https://afilimax.net",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Afilimax/amazon-scraper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Afilimax/amazon-scraper/issues"
   }
 }
